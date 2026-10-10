@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoxPad - 3D Engine & Game Builder</title>
+    <script src="https://unpkg.com"></script>
+    <script src="https://unpkg.com"></script>
+    <script src="https://unpkg.com"></script>
+    <script src="https://unpkg.com"></script>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        :root { --bg-cyber: #0a0b10; --panel-bg: #12131a; --neon-blue: #00f0ff; --neon-green: #39ff14; }
+        body { margin: 0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif; background: var(--bg-cyber); color: white; overflow: hidden; }
+        header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid #1f2330; }
+        .logo { font-size: 22px; font-weight: bold; color: var(--neon-blue); letter-spacing: 2px; }
+        .btn-run { padding: 10px 20px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; background: var(--neon-green); color: #000; box-shadow: 0 0 15px rgba(57,255,20,0.4); }
+        main { display: flex; flex: 1; height: calc(100vh - 65px); }
+        #bloco-area { width: 50%; height: 100%; background: #181920; }
+        #jogo-container { width: 50%; height: 100%; background: #050508; }
+        .blocklyTreeLabel { color: #fff !important; }
+        .blocklyToolboxDiv { background-color: var(--panel-bg) !important; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">VOXPAD ENGINE 🚀</div>
+        <button class="btn-run" id="btn-rodar">RODAR CÓDIGO ⚡</button>
+    </header>
+    <main>
+        <div id="bloco-area"></div>
+        <div id="jogo-container"></div>
+    </main>
+    <xml id="toolbox" style="display: none">
+        <category name="📦 FORMAS 3D" colour="#00f0ff">
+            <block type="criar_cubo"></block>
+            <block type="criar_chao"></block>
+        </category>
+        <category name="🔄 MOVIMENTO" colour="#39ff14">
+            <block type="rodar_objeto"></block>
+        </category>
+    </xml>
+    <script>
+        window.addEventListener('load', () => {
+            const container = document.getElementById('jogo-container');
+            const cena = new THREE.Scene();
+            const camara = new THREE.PerspectiveCamera(60, (window.innerWidth / 2) / (window.innerHeight - 65), 0.1, 1000);
+            const renderizador = new THREE.WebGLRenderer({ antialias: true });
+            renderizador.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderizador.domElement);
+            camara.position.set(0, 5, 8); camara.lookAt(0, 0, 0);
+            const luzSol = new THREE.DirectionalLight(0xffffff, 1.2); luzSol.position.set(10, 20, 10); cena.add(luzSol);
+            cena.add(new THREE.AmbientLight(0x1a1a2e));
+            cena.add(new THREE.GridHelper(40, 40, 0x00f0ff, 0x1f2330));
+            let oMeuCubo = null; let deveRodar = false;
+            function animar() {
+                requestAnimationFrame(animar);
+                if(oMeuCubo && deveRodar) { oMeuCubo.rotation.x += 0.01; oMeuCubo.rotation.y += 0.02; }
+                renderizador.render(cena, camara);
+            }
+            animar();
+            Blockly.Blocks['criar_cubo'] = { init: function() {
+                this.appendDummyInput().appendField("Criar Cubo 3D 📦");
+                this.setPreviousStatement(true, null); this.setNextStatement(true, null); this.setColour("#00f0ff");
+            }};
+            Blockly.JavaScript['criar_cubo'] = function(block) {
+                return `var geo = new THREE.BoxGeometry(1.5, 1.5, 1.5); var mat = new THREE.MeshNormalMaterial(); oMeuCubo = new THREE.Mesh(geo, mat); oMeuCubo.position.set(0, 0.75, 0); cena.add(oMeuCubo);\n`;
+            };
+            Blockly.Blocks['criar_chao'] = { init: function() {
+                this.appendDummyInput().appendField("Adicionar Terreno 🏝️");
+                this.setPreviousStatement(true, null); this.setNextStatement(true, null); this.setColour("#00f0ff");
+            }};
+            Blockly.JavaScript['criar_chao'] = function(block) {
+                return `var geo = new THREE.PlaneGeometry(40, 40); var mat = new THREE.MeshStandardMaterial({ color: 0x111218, roughness: 0.8 }); var mesh = new THREE.Mesh(geo, mat); mesh.rotation.x = -Math.PI / 2; cena.add(mesh);\n`;
+            };
+            Blockly.Blocks['rodar_objeto'] = { init: function() {
+                this.appendDummyInput().appendField("Fazer Rodar 🔄");
+                this.setPreviousStatement(true, null); this.setNextStatement(true, null); this.setColour("#39ff14");
+            }};
+            Blockly.JavaScript['rodar_objeto'] = function(block) { return `deveRodar = true;\n`; };
+            const workspace = Blockly.inject('bloco-area', { toolbox: document.getElementById('toolbox'), trashcan: true });
+            document.getElementById('btn-rodar').addEventListener('click', () => {
+                while(cena.children.length > 3){ cena.remove(cena.children[cena.children.length-1]); }
+                oMeuCubo = null; deveRodar = false;
+                const codigo = Blockly.JavaScript.workspaceToCode(workspace);
+                try { eval(codigo); } catch(e) { console.error(e); }
+            });
+        });
+    </script>
+</body>
+</html>
