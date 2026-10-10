@@ -3,84 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPad - 3D Engine & Game Builder</title>
+    <title>VoxPad - 3D Engine</title>
     
-    <!-- Scripts estáveis via CDN de alta compatibilidade para iPad -->
+    <!-- Scripts CDN de Alta Compatibilidade carregados na ordem correta -->
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
     
     <style>
-        :root { 
-            --bg-cyber: #0a0b10; 
-            --panel-bg: #12131a; 
-            --neon-blue: #00f0ff; 
-            --neon-green: #39ff14; 
-        }
-        body { 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            font-family: sans-serif; 
-            background: var(--bg-cyber); 
-            color: white; 
-            overflow: hidden; 
-        }
-        header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: var(--panel-bg); 
-            padding: 10px 20px; 
-            border-bottom: 2px solid #1f2330; 
-            height: 45px;
-        }
-        .logo { 
-            font-size: 22px; 
-            font-weight: bold; 
-            color: var(--neon-blue); 
-            letter-spacing: 2px; 
-        }
-        .btn-run { 
-            padding: 10px 20px; 
-            font-weight: bold; 
-            border-radius: 6px; 
-            border: none; 
-            cursor: pointer; 
-            background: var(--neon-green); 
-            color: #000; 
-            box-shadow: 0 0 15px rgba(57,255,20,0.4); 
-        }
-        main { 
-            display: flex; 
-            flex: 1; 
-            height: calc(100vh - 65px); 
-        }
-        #bloco-area { 
-            width: 50%; 
-            height: 100%; 
-            background: #181920; 
-        }
-        #jogo-container { 
-            width: 50%; 
-            height: 100%; 
-            background: #050508; 
-        }
-        .blocklyTreeLabel { 
-            color: #fff !important; 
-        }
-        .blocklyToolboxDiv { 
-            background-color: var(--panel-bg) !important; 
-        }
+        :root { --bg: #0a0b10; --panel: #12131a; --blue: #00f0ff; --green: #39ff14; }
+        * { box-sizing: border-box; }
+        body { margin: 0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif; background: var(--bg); color: white; overflow: hidden; }
+        header { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 0 20px; height: 60px; border-bottom: 2px solid #1f2330; }
+        .logo { font-size: 20px; font-weight: bold; color: var(--blue); letter-spacing: 2px; }
+        .btn-run { padding: 10px 20px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; background: var(--green); color: #000; box-shadow: 0 0 15px rgba(57,255,20,0.4); }
+        main { display: flex; flex: 1; height: calc(100vh - 60px); width: 100vw; }
+        #bloco-area { width: 50%; height: 100%; background: #181920; }
+        #jogo-container { width: 50%; height: 100%; background: #050508; position: relative; }
+        .blocklyTreeLabel { color: #fff !important; }
+        .blocklyToolboxDiv { background-color: var(--panel) !important; }
     </style>
 </head>
 <body>
+
     <header>
         <div class="logo">VOXPAD ENGINE 🚀</div>
         <button class="btn-run" id="btn-rodar">RODAR CÓDIGO ⚡</button>
     </header>
+    
     <main>
         <div id="bloco-area"></div>
         <div id="jogo-container"></div>
@@ -98,12 +49,13 @@
     </xml>
 
     <script>
-        window.addEventListener('load', () => {
+        // Esta função garante que o script só corre DEPOIS das divs estarem prontas no iPad
+        window.onload = function() {
             const container = document.getElementById('jogo-container');
             const cena = new THREE.Scene();
             
-            // Configuração da Câmara e Renderizador
-            const camara = new THREE.PerspectiveCamera(60, (window.innerWidth / 4) / (window.innerHeight - 65), 0.1, 1000);
+            // Configuração do Visualizador 3D
+            const camara = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
             const renderizador = new THREE.WebGLRenderer({ antialias: true });
             renderizador.setSize(container.clientWidth, container.clientHeight);
             container.appendChild(renderizador.domElement);
@@ -111,19 +63,17 @@
             camara.position.set(0, 5, 8); 
             camara.lookAt(0, 0, 0);
             
-            // Iluminação do mundo virtual
+            // Luzes e Grelha Neon
             const luzSol = new THREE.DirectionalLight(0xffffff, 1.2); 
             luzSol.position.set(10, 20, 10); 
             cena.add(luzSol);
             cena.add(new THREE.AmbientLight(0x1a1a2e));
-            
-            // Arena Neon do VoxPad
             cena.add(new THREE.GridHelper(40, 40, 0x00f0ff, 0x1f2330));
             
             let oMeuCubo = null; 
             let deveRodar = false;
             
-            // Loop de Animação 3D
+            // Loop de Animação Real-time
             function animar() {
                 requestAnimationFrame(animar);
                 if(oMeuCubo && deveRodar) { 
@@ -134,14 +84,14 @@
             }
             animar();
 
-            // Ajustar o ecrã se o iPad rodar
+            // Ajustar o tamanho se mudar a orientação do iPad
             window.addEventListener('resize', () => {
                 renderizador.setSize(container.clientWidth, container.clientHeight);
                 camara.aspect = container.clientWidth / container.clientHeight;
                 camara.updateProjectionMatrix();
             });
 
-            // === DEFINIÇÃO DOS BLOCOS DO SCRATCH 3D ===
+            // === DEFINIÇÃO DOS BLOCOS DO VOXPAD ===
             Blockly.Blocks['criar_cubo'] = { 
                 init: function() {
                     this.appendDummyInput().appendField("Criar Cubo 3D 📦");
@@ -178,15 +128,14 @@
                 return `deveRodar = true;\n`; 
             };
 
-            // Iniciar o espaço Blockly do lado esquerdo
+            // Injetar o Blockly na div estrutural de forma segura
             const workspace = Blockly.inject('bloco-area', { 
                 toolbox: document.getElementById('toolbox'), 
                 trashcan: true 
             });
 
-            // Ação do Botão Rodar Código
+            // Executar a compilação dos blocos
             document.getElementById('btn-rodar').addEventListener('click', () => {
-                // Remove apenas os objetos criados por blocos, mantém a grelha e as luzes
                 while(cena.children.length > 3){ 
                     cena.remove(cena.children[cena.children.length-1]); 
                 }
@@ -200,7 +149,7 @@
                     console.error(e); 
                 }
             });
-        });
+        };
     </script>
 </body>
 </html>
